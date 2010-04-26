@@ -91,7 +91,7 @@ class Layer:
 		Return the molar flux in moles per second (per unit area) at a given T
 		"""
 		vp = self.getVaporPressures(T)
-		mw = self.molecular_weights
+		mw = self.molecular_weights / 6.02E23
 		kb = 1.38E-23 # m^2 kg s^-2 K^-1 !!
 		Je = vp / numpy.sqrt(2*numpy.pi * kb * T)
 		return Je
