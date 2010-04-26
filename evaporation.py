@@ -112,11 +112,13 @@ class Layer:
 		temperature = Y[-1]
 		amounts = Y[:-1]
 		self.amounts = amounts
-		# first get the species amounts
-		dYdt = -1 * self.getMolarFluxes(temperature)
-		# then get the temperature change
-		dTdt = 
-		dYdt.append(dTdt)
+		# first get the species amount changes (as an array)
+		dNdt = -1 * self.getMolarFluxes(temperature)
+		# then get the temperature change, and append it to the array
+		dUdt = sum( dNdt * self.enthalpies_of_vaporization )
+		dUdt = dUdt + self.getHeatFlux(temperature)
+		dTdt = dUdt / sum( self.amounts * self.molar_heat_capacities )
+		return numpy.append(dNdt,dTdt)
 
 def main():
 	pass
@@ -143,3 +145,7 @@ print "The vapor pressures at 400K are", layer.getVaporPressures(400)
 
 print "The molar fluxes at 400K are", layer.getMolarFluxes(400)
 
+# add the temperature on as the last variable
+vector_of_variables = numpy.append(layer.amounts, 400)
+
+print "The right hand side of the ODE at t=0 is ", layer.rightSideOfODE(vector_of_variables, 0)
