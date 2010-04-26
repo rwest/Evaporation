@@ -13,7 +13,11 @@ import os
 import numpy
 
 class Compound:
-	"""A chemical compound"""
+	"""
+	A chemical compound
+	
+	A,B,C are Antoine parameters in Bar and Kelvin
+	"""
 	def __init__(self, A, B, C, molar_density, MW, Hvap, Cp):
 		self.A = A
 		self.B = B
@@ -24,21 +28,21 @@ class Compound:
 		self.molar_heat_capacity = Cp
 	
 	def getPureComponentVaporPressure(self,Temperature):
-		"""Use Antoine Equation to get saturated vapor pressure at Temperature.
+		"""
+		Use Antoine Equation to get saturated vapor pressure at Temperature.
+		returns P in Pa
 		
-		Note the units in Antoine Eqn is mmHg and C
+		Assumes A,B,C are for bar and K (as provided on webbook.nist.gov)
+		
 		P = 10^(A-B/(C+T))
 		"""
 		A = self.A
 		B = self.B
 		C = self.C
-		# transfer from mmHg to Pa
-		# A = A0 + log10(101325/760)
-		A = A + 2.124903
-		# transfer from C to K
-		C = C-273.15
+		
 		# Antoine's Equation
-		return 10**(A-B / (C + Temperature))
+		Pbar =  10**(A - B / (C + Temperature))
+		return Pbar * 1E5 # to get Pa
 		
 class Layer:
 	"""
@@ -127,8 +131,8 @@ if __name__ == '__main__':
 	main()
 
 
-undecane = Compound(A=6.9722, B=1569.57, C=187.7, molar_density=4945, MW = 156.0, Hvap=56.4, Cp=341.1)
-c21 = Compound(A=7.0842, B=2054, C=120.1, molar_density =2729, MW=310.0, Hvap=142, Cp=666.4)
+undecane = Compound(A=4.101, B=1572.477, C=-85.128, molar_density=4945, MW=156.0, Hvap=56.4, Cp=341.1)
+c21      = Compound(A=5.921, B=3571.218, C=-19.953, molar_density=2729, MW=310.0, Hvap=142,  Cp=666.4)
 
 print "Vapor pressure of pure undecane at 400K is ", undecane.getPureComponentVaporPressure(400)
 print "and its Enthlapy of vaporization is",undecane.enthalpy_of_vaporization
