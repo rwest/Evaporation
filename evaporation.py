@@ -14,12 +14,14 @@ import numpy
 
 class Compound:
 	"""A chemical compound"""
-	def __init__(self, A, B, C, molar_density, MW):
+	def __init__(self, A, B, C, molar_density, MW, Hvap, Cp):
 		self.A = A
 		self.B = B
 		self.C = C
 		self.molar_density = molar_density
 		self.molecular_weight = MW
+		self.enthalpy_of_vaporization = Hvap
+		self.molar_heat_capacity = Cp
 	
 	def getPureComponentVaporPressure(self,Temperature):
 		"""Use Antoine Equation to get saturated vapor pressure at Temperature.
@@ -53,6 +55,8 @@ class Layer:
 			self.amounts = numpy.zeros(self.number_of_components)
 			
 		self.molecular_weights = numpy.array([ c.molecular_weight for c in self.components ])
+		self.enthalpies_of_vaporization  = numpy.array([ c.enthalpy_of_vaporization for c in self.components ])
+		self.molar_heat_capacities = numpy.array([c.molar_heat_capacity for c in self.components])
 	
 	def getMoleFractions(self):
 		"""return an array of the mole fractions"""
@@ -107,10 +111,11 @@ if __name__ == '__main__':
 	main()
 
 
-undecane = Compound(A=6.9722, B=1569.57, C=187.7, molar_density=4945, MW = 156.0)
-c21 = Compound(A=7.0842, B=2054, C=120.1, molar_density =2729, MW=310.0)
+undecane = Compound(A=6.9722, B=1569.57, C=187.7, molar_density=4945, MW = 156.0, Hvap=56.4, Cp=341.1)
+c21 = Compound(A=7.0842, B=2054, C=120.1, molar_density =2729, MW=310.0, Hvap=142, Cp=666.4)
 
 print "Vapor pressure of pure undecane at 400K is ", undecane.getPureComponentVaporPressure(400)
+print "and its Enthlapy of vaporization is",undecane.enthalpy_of_vaporization
 
 list_of_compounds = [undecane, c21]
 
