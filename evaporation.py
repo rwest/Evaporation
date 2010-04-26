@@ -12,6 +12,8 @@ import os
 
 import numpy
 
+from scipy.integrate import odeint
+
 class Compound:
 	"""
 	A chemical compound
@@ -153,3 +155,25 @@ print "The molar fluxes at 400K are", layer.getMolarFluxes(400)
 vector_of_variables = numpy.append(layer.amounts, 400)
 
 print "The right hand side of the ODE at t=0 is ", layer.rightSideOfODE(vector_of_variables, 0)
+
+timepoints = numpy.linspace(0,5,501) # 501 points spread linearly between 0 and 5 seconds
+results = odeint(layer.rightSideOfODE, vector_of_variables, timepoints)
+print "After %g seconds the vector of results is %s"%(timepoints[-1], results[-1])
+
+# slice off the last column of results, which are temperatures
+amounts = results[:,:-1]
+temperatures = results[:,-1]
+
+
+
+#plot the results
+import pylab
+pylab.figure(1)
+pylab.plot(timepoints,amounts)
+pylab.show()
+
+pylab.figure(2)
+pylab.plot(timepoints,temperatures)
+pylab.show()
+
+
