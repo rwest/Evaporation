@@ -57,6 +57,12 @@ class Layer:
 		self.molecular_weights = numpy.array([ c.molecular_weight for c in self.components ])
 		self.enthalpies_of_vaporization  = numpy.array([ c.enthalpy_of_vaporization for c in self.components ])
 		self.molar_heat_capacities = numpy.array([c.molar_heat_capacity for c in self.components])
+		
+		# it would make more sense to take these values as variables (like components, etc.)
+		# but for now we just hard-code them here: 
+		self.heat_transfer_coefficient = 40  # J / K / m^2 / s    (i.e. W/m2K)
+		# 40 W/m2K = ballpark figure eyeballed from a picture in doi:10.1016/0017-9310(80)90153-2
+		self.T_wall = 500 # Kelvin. 
 	
 	def getMoleFractions(self):
 		"""return an array of the mole fractions"""
@@ -85,6 +91,14 @@ class Layer:
 		kb = 1.38E-23 # m^2 kg s^-2 K^-1 !!
 		Je = vp / numpy.sqrt(2*numpy.pi * kb * T)
 		return Je
+	
+	def getHeatFlux(self, T):
+		"""
+		Get the heat flux (Q) into the layer from the hot wall (per unit area)
+		when the layer is at temperature T.
+		"""
+		Q = self.heat_transfer_coefficient * (self.T_wall - T)
+		return Q
 		
 	def rightSideOfODE(self, Y, t):
 		"""
