@@ -25,7 +25,7 @@ class Compound:
 		self.B = B
 		self.C = C
 		self.molar_density = molar_density
-		self.molecular_weight = MW
+		self.molar_mass = MW
 		self.enthalpy_of_vaporization = Hvap
 		self.molar_heat_capacity = Cp
 	
@@ -60,7 +60,7 @@ class Layer:
 		else:
 			self.amounts = numpy.zeros(self.number_of_components)
 			
-		self.molecular_weights = numpy.array([ c.molecular_weight for c in self.components ])
+		self.molar_masses = numpy.array([ c.molar_mass for c in self.components ])
 		self.enthalpies_of_vaporization  = numpy.array([ c.enthalpy_of_vaporization for c in self.components ])
 		self.molar_heat_capacities = numpy.array([c.molar_heat_capacity for c in self.components])
 		self.molar_densities = numpy.array([c.molar_density for c in self.components])
@@ -94,7 +94,7 @@ class Layer:
 		Return the molar flux in moles per second (per unit area) at a given T
 		"""
 		vp = self.getVaporPressures(T)
-		mw = self.molecular_weights / 6.02E23
+		mw = self.molar_masses*0.001 / 6.02E23  # mass of molecule in kg
 		kb = 1.38E-23 # m^2 kg s^-2 K^-1 !!
 		Je = vp / numpy.sqrt(2*numpy.pi * kb * T)
 		return Je
