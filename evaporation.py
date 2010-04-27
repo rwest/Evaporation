@@ -166,7 +166,7 @@ vector_of_variables = numpy.append(layer.amounts, 400)
 
 print "The right hand side of the ODE at t=0 is ", layer.rightSideOfODE(vector_of_variables, 0)
 
-timepoints = numpy.linspace(0,5,501) # 501 points spread linearly between 0 and 5 seconds
+timepoints = numpy.linspace(0,1,501) # 501 points spread linearly between 0 and 1 seconds
 results = odeint(layer.rightSideOfODE, vector_of_variables, timepoints)
 print "After %g seconds the vector of results is %s"%(timepoints[-1], results[-1])
 
@@ -174,16 +174,27 @@ print "After %g seconds the vector of results is %s"%(timepoints[-1], results[-1
 amounts = results[:,:-1]
 temperatures = results[:,-1]
 
+thicknesses = amounts / layer.molar_densities
+thicknesses = thicknesses.sum(axis=1) # add the components up, at each time point
 
 
 #plot the results
 import pylab
 pylab.figure(1)
 pylab.plot(timepoints,amounts)
+pylab.xlabel("time (s)")
+pylab.ylabel("amount (mol/m2)")
 pylab.show()
 
 pylab.figure(2)
 pylab.plot(timepoints,temperatures)
+pylab.xlabel("time (s)")
+pylab.ylabel("temperature (K)")
 pylab.show()
 
+pylab.figure(3)
+pylab.plot(timepoints,thicknesses)
+pylab.xlabel("time (s)")
+pylab.ylabel("thickness (m)")
+pylab.show()
 
