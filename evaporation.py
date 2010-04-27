@@ -63,6 +63,7 @@ class Layer:
 		self.molecular_weights = numpy.array([ c.molecular_weight for c in self.components ])
 		self.enthalpies_of_vaporization  = numpy.array([ c.enthalpy_of_vaporization for c in self.components ])
 		self.molar_heat_capacities = numpy.array([c.molar_heat_capacity for c in self.components])
+		self.molar_densities = numpy.array([c.molar_density for c in self.components])
 		
 		# it would make more sense to take these values as variables (like components, etc.)
 		# but for now we just hard-code them here: 
@@ -132,7 +133,6 @@ def main():
 if __name__ == '__main__':
 	main()
 
-
 undecane = Compound(A=4.101, B=1572.477, C=-85.128, molar_density=4945, MW=156.0, Hvap=56.4, Cp=341.1)
 c21      = Compound(A=5.921, B=3571.218, C=-19.953, molar_density=2729, MW=310.0, Hvap=142,  Cp=666.4)
 
@@ -141,9 +141,16 @@ print "and its Enthlapy of vaporization is",undecane.enthalpy_of_vaporization
 
 list_of_compounds = [undecane, c21]
 
-initial_amounts = numpy.array([1.0, 2.0]) # moles (per unit area)
+layer = Layer(list_of_compounds)
 
-layer = Layer(list_of_compounds, initial_amounts)
+initial_amounts = numpy.array([1.0, 2.0])   # relative molar amounts - will be scaled to get correct initial_thickness
+current_thickness = sum( initial_amounts / layer.molar_densities )
+
+initial_thickness = 0.5e-3 # m
+initial_amounts = initial_amounts * initial_thickness/current_thickness # moles (per unit area)
+
+# set the amounts
+layer.amounts = initial_amounts
 
 print "The initial mole fractions are ", layer.getMoleFractions()
 
