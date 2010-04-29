@@ -34,6 +34,7 @@ class Compound:
 	def __repr__(self):
 		"""This function returns how the compound will look in the console."""
 		return "<Compound %r>"%self.name
+		
 	def getPureComponentVaporPressure(self,Temperature):
 		"""
 		Use Antoine Equation to get saturated vapor pressure at Temperature.
@@ -71,9 +72,8 @@ class CompoundsDatabase(dict):
 			              Hvap = float(row['Enthalpy of Vaporization']),
 			              Cp = float(row['Molar Heat Capacity']) )
 			# place it in the dictionary
-			# print "Have just read in ",c
+			#print "Have just read in ",c
 			self[c.name] = c
-	
 		
 class Layer:
 	"""
