@@ -29,6 +29,10 @@ class Compound:
 		self.molar_heat_capacity = Cp
 		# derived properties
 		self.molar_density = mass_density / (0.001*MW) # kg/m^3 / kg/mol = mol/m^3
+		
+	def __repr__(self):
+		"""This function returns how the compound will look in the console."""
+		return "<Compound %r>"%self.name
 	def getPureComponentVaporPressure(self,Temperature):
 		"""
 		Use Antoine Equation to get saturated vapor pressure at Temperature.
