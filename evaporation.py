@@ -13,6 +13,7 @@ import os
 import numpy
 
 from scipy.integrate import odeint
+import csv
 
 class Compound:
 	"""
@@ -49,6 +50,30 @@ class Compound:
 		# Antoine's Equation
 		Pbar =  10**(A - B / (C + Temperature))
 		return Pbar * 1E5 # to get Pa
+		
+class CompoundsDatabase(dict):
+	"""
+	A collection of information about compounds.
+	Behaves like a dict (dictionary)
+	"""
+	
+	def __init__(self,file_path):
+		"""
+		Reads in an excel-formatted CSV file with column headings in the first row.
+		"""
+		data_reader = csv.DictReader(file(file_path,'rU'))
+		for row in data_reader:
+			# we have to turn the strings into floating point numbers.
+			c = Compound( name = row['Name'],
+			              Antoine_params = [float(row['Antoine A']),float(row['Antoine B']),float(row['Antoine C'])],
+			              mass_density = float(row['Mass Density']),
+			              MW = float(row['Molecular Weight']),
+			              Hvap = float(row['Enthalpy of Vaporization']),
+			              Cp = float(row['Molar Heat Capacity']) )
+			# place it in the dictionary
+			# print "Have just read in ",c
+			self[c.name] = c
+	
 		
 class Layer:
 	"""
@@ -140,13 +165,16 @@ def main():
 if __name__ == '__main__':
 	main()
 
-undecane = Compound(Antoine_params=[4.101, 1572.477, -85.128], mass_density=740, MW=156.0, Hvap=56.4, Cp=341.1)
-c21      = Compound(Antoine_params=[5.921, 3571.218, -19.953], mass_density=740, MW=310.0, Hvap=142,  Cp=666.4) # density made up
+compounds = CompoundsDatabase('compounds.csv')
+undecane=compounds['undecane']
 
 print "Vapor pressure of pure undecane at 400K is ", undecane.getPureComponentVaporPressure(400)
 print "and its Enthlapy of vaporization is",undecane.enthalpy_of_vaporization
 
-list_of_compounds = [undecane, c21]
+# this would be the full list in a random order:
+list_of_compounds = compounds.values()
+# this will be just the two we specify, in the specified order:
+list_of_compounds = [ compounds[name] for name in ['undecane', 'c21'] ]
 
 layer = Layer(list_of_compounds)
 
