@@ -13,6 +13,7 @@ import os
 import numpy
 
 from scipy.integrate import odeint
+import csv
 
 class Compound:
 	"""
@@ -20,15 +21,19 @@ class Compound:
 	
 	A,B,C are Antoine parameters in Bar and Kelvin
 	"""
-	def __init__(self, A, B, C, molar_density, MW, Hvap, Cp):
-		self.A = A
-		self.B = B
-		self.C = C
-		self.molar_density = molar_density
-		self.molar_mass = MW
+	def __init__(self, name, Antoine_params, mass_density, MW, Hvap, Cp):
+		self.name = name
+		self.Antoine_params = Antoine_params # a tuple or list: [A,B,C]
+		self.mass_density = mass_density # kg/m^3
+		self.molar_mass = MW # g/mol
 		self.enthalpy_of_vaporization = Hvap
 		self.molar_heat_capacity = Cp
-	
+		# derived properties
+		self.molar_density = mass_density / (0.001*MW) # kg/m^3 / kg/mol = mol/m^3
+		
+	def __repr__(self):
+		"""This function returns how the compound will look in the console."""
+		return "<Compound %r>"%self.name
 	def getPureComponentVaporPressure(self,Temperature):
 		"""
 		Use Antoine Equation to get saturated vapor pressure at Temperature.
@@ -38,13 +43,38 @@ class Compound:
 		
 		P = 10^(A-B/(C+T))
 		"""
-		A = self.A
-		B = self.B
-		C = self.C
+		A = self.Antoine_params[0]
+		B = self.Antoine_params[1]
+		C = self.Antoine_params[2]
 		
 		# Antoine's Equation
 		Pbar =  10**(A - B / (C + Temperature))
 		return Pbar * 1E5 # to get Pa
+		
+class CompoundsDatabase(dict):
+	"""
+	A collection of information about compounds.
+	Behaves like a dict (dictionary)
+	"""
+	
+	def __init__(self,file_path):
+		"""
+		Reads in an excel-formatted CSV file with column headings in the first row.
+		"""
+		data_reader = csv.DictReader(file(file_path,'rU'))
+		self.__dict__ = dict()
+		for row in data_reader:
+			# we have to turn the strings into floating point numbers.
+			c = Compound( name = row['Name'],
+			              Antoine_params = [float(row['Antoine A']),float(row['Antoine B']),float(row['Antoine C'])],
+			              mass_density = float(row['Mass Density']),
+			              MW = float(row['Molecular Weight']),
+			              Hvap = float(row['Enthalpy of Vaporization']),
+			              Cp = float(row['Molar Heat Capacity']) )
+			# place it in the dictionary
+			print "Have just read in ",c
+			self.__dict__[c.name] = c
+	
 		
 class Layer:
 	"""
@@ -136,8 +166,11 @@ def main():
 if __name__ == '__main__':
 	main()
 
-undecane = Compound(A=4.101, B=1572.477, C=-85.128, molar_density=4945, MW=156.0, Hvap=56.4, Cp=341.1)
-c21      = Compound(A=5.921, B=3571.218, C=-19.953, molar_density=2729, MW=310.0, Hvap=142,  Cp=666.4)
+#undecane = Compound(Antoine_params=[4.101, 1572.477, -85.128], molar_density=4945, MW=156.0, Hvap=56.4, Cp=341.1)
+#c21      = Compound(Antoine_params=[5.921, 3571.218, -19.953], molar_density=2729, MW=310.0, Hvap=142,  Cp=666.4)
+
+compounds = CompoundsDatabase('compounds.csv')
+undecane=compounds['undecane']
 
 print "Vapor pressure of pure undecane at 400K is ", undecane.getPureComponentVaporPressure(400)
 print "and its Enthlapy of vaporization is",undecane.enthalpy_of_vaporization
