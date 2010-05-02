@@ -99,7 +99,7 @@ class Layer:
 		# but for now we just hard-code them here: 
 		self.heat_transfer_coefficient = 40  # J / K / m^2 / s    (i.e. W/m2K)
 		# 40 W/m2K = ballpark figure eyeballed from a picture in doi:10.1016/0017-9310(80)90153-2
-		self.T_wall = 500 # Kelvin. 
+		self.T_wall = 873.15 # Kelvin. 
 	
 	def getMoleFractions(self):
 		"""return an array of the mole fractions"""
@@ -169,20 +169,20 @@ if __name__ == '__main__':
 compounds = CompoundsDatabase('compounds.csv')
 undecane=compounds['undecane']
 
-print "Vapor pressure of pure undecane at 400K is ", undecane.getPureComponentVaporPressure(400)
+print "Vapor pressure of pure undecane at 300K is ", undecane.getPureComponentVaporPressure(300)
 print "and its Enthlapy of vaporization is",undecane.enthalpy_of_vaporization
 
 # this would be the full list in a random order:
 list_of_compounds = compounds.values()
-# this will be just the two we specify, in the specified order:
-list_of_compounds = [ compounds[name] for name in ['undecane', 'c21'] ]
+# this will be just the eight we specify, in the specified order:
+list_of_compounds = [ compounds[name] for name in ['undecane', 'c21', 'acetophenone', 'diethyl phthalate', 'diethylene glycol', 'epsilon-caprolactone', 'gamma-butyrolactone', 'glycerol', 'triethylene glycol'] ]
 
 layer = Layer(list_of_compounds)
 
-initial_amounts = numpy.array([1.0, 2.0])   # relative molar amounts - will be scaled to get correct initial_thickness
+initial_amounts = numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])   # relative molar amounts - will be scaled to get correct initial_thickness
 current_thickness = sum( initial_amounts / layer.molar_densities )
 
-initial_thickness = 0.5e-3 # m
+initial_thickness = 1.0e-5 # m
 initial_amounts = initial_amounts * initial_thickness/current_thickness # moles (per unit area)
 
 # set the amounts
@@ -190,16 +190,16 @@ layer.amounts = initial_amounts
 
 print "The initial mole fractions are ", layer.getMoleFractions()
 
-print "The vapor pressures at 400K are", layer.getVaporPressures(400)
+print "The vapor pressures at 300K are", layer.getVaporPressures(300)
 
-print "The molar fluxes at 400K are", layer.getMolarFluxes(400)
+print "The molar fluxes at 300K are", layer.getMolarFluxes(300)
 
 # add the temperature on as the last variable
-vector_of_variables = numpy.append(layer.amounts, 400)
+vector_of_variables = numpy.append(layer.amounts, 300)
 
 print "The right hand side of the ODE at t=0 is ", layer.rightSideOfODE(vector_of_variables, 0)
 
-timepoints = numpy.linspace(0,1,501) # 501 points spread linearly between 0 and 1 seconds
+timepoints = numpy.linspace(0,0.2,201) # 201 points spread linearly between 0 and 0.2 seconds
 results = odeint(layer.rightSideOfODE, vector_of_variables, timepoints)
 print "After %g seconds the vector of results is %s"%(timepoints[-1], results[-1])
 
