@@ -6,7 +6,6 @@ evaporation.py
 Created by Richard West on 2010-04-26.
 Copyright (c) 2010 MIT. All rights reserved.
 
-this line written by kelly as a test
 """
 
 import sys
@@ -21,7 +20,7 @@ class Compound:
 	"""
 	A chemical compound
 	
-	A,B,C are Antoine parameters in Bar and Kelvin
+	A,B,C are Antoine parameters in mmHg and Kelvin
 	"""
 	def __init__(self, name, Antoine_params, mass_density, MW, Hvap, Cp):
 		self.name = name
@@ -42,7 +41,7 @@ class Compound:
 		Use Antoine Equation to get saturated vapor pressure at Temperature.
 		returns P in Pa
 		
-		Assumes A,B,C are for bar and K (as provided on webbook.nist.gov)
+		A,B,C are for mmHg and K (as provided in Epstein 2009 Supp Info) and must subtract 273.15 from Temperature to convert to degrees C as required by Antoine Eqn.
 		
 		P = 10^(A-B/(C+T))
 		"""
@@ -51,8 +50,8 @@ class Compound:
 		C = self.Antoine_params[2]
 		
 		# Antoine's Equation
-		Pbar =  10**(A - B / (C + Temperature))
-		return Pbar * 1E5 # to get Pa
+		PmmHg =  10**(A - B / (C + Temperature - 273.15))
+		return PmmHg * 133.322 # to get Pa
 		
 class CompoundsDatabase(dict):
 	"""
