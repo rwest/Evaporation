@@ -22,12 +22,12 @@ class Compound:
 	
 	A,B,C are Antoine parameters in mmHg and Kelvin
 	"""
-	def __init__(self, name, Antoine_params, mass_density, MW, Hvap, Cp):
+	def __init__(self, name, Antoine_params, mass_density, MW, Cp):
 		self.name = name
 		self.Antoine_params = Antoine_params # a tuple or list: [A,B,C]
 		self.mass_density = mass_density # kg/m^3
 		self.molar_mass = MW # g/mol
-		self.enthalpy_of_vaporization = Hvap
+		#self.enthalpy_of_vaporization = Hvap
 		self.molar_heat_capacity = Cp
 		# derived properties
 		self.molar_density = mass_density / (0.001*MW) # kg/m^3 / kg/mol = mol/m^3
@@ -35,7 +35,23 @@ class Compound:
 	def __repr__(self):
 		"""This function returns how the compound will look in the console."""
 		return "<Compound %r>"%self.name
-		
+
+	def getEnthalpiesofVaporization(self,Temperature):
+		"""
+                Use Antoine Parameters and Eqn 7 from Epstein 2009 to get enthalpies of vaporization at Temperature.
+
+                Hvap = 2.303*R*T^2*B/(C+T-273.15)^2
+
+                R = 8.3145 J/molK
+              """
+		B = self.Antoine_params[1]
+		C = self.Antoine_params[2]
+
+		# Eqn 7 from Epstein et al 2009
+		Hvap = 2.303*8.3145*Temperature*Temperature*B/((C + Temperature - 273.15)*(C + Temperature - 273.15))
+		return Hvap # units are J/molK
+
+
 	def getPureComponentVaporPressure(self,Temperature):
 		"""
 		Use Antoine Equation to get saturated vapor pressure at Temperature.
@@ -43,7 +59,7 @@ class Compound:
 		
 		A,B,C are for mmHg and K (as provided in Epstein 2009 Supp Info) and must subtract 273.15 from Temperature to convert to degrees C as required by Antoine Eqn.
 		
-		P = 10^(A-B/(C+T))
+		P = 10^(A-B/(C+T-273.15))
 		"""
 		A = self.Antoine_params[0]
 		B = self.Antoine_params[1]
@@ -70,7 +86,7 @@ class CompoundsDatabase(dict):
 			              Antoine_params = [float(row['Antoine A']),float(row['Antoine B']),float(row['Antoine C'])],
 			              mass_density = float(row['Mass Density']),
 			              MW = float(row['Molecular Weight']),
-			              Hvap = float(row['Enthalpy of Vaporization']),
+			              #Hvap = float(row['Enthalpy of Vaporization']),
 			              Cp = float(row['Molar Heat Capacity']) )
 			# place it in the dictionary
 			#print "Have just read in ",c
@@ -91,7 +107,7 @@ class Layer:
 			self.amounts = numpy.zeros(self.number_of_components)
 			
 		self.molar_masses = numpy.array([ c.molar_mass for c in self.components ])
-		self.enthalpies_of_vaporization  = numpy.array([ c.enthalpy_of_vaporization for c in self.components ])
+		#self.enthalpies_of_vaporization  = numpy.array([ c.enthalpy_of_vaporization for c in self.components ])
 		self.molar_heat_capacities = numpy.array([c.molar_heat_capacity for c in self.components])
 		self.molar_densities = numpy.array([c.molar_density for c in self.components])
 		
@@ -104,7 +120,14 @@ class Layer:
 	def getMoleFractions(self):
 		"""return an array of the mole fractions"""
 		return self.amounts / self.amounts.sum()
-		
+
+	def getEnthalpiesofVaporization(self,T):
+		"""return an array of the enthalpies of vaporization at a given T"""
+		answer = list()
+		for c in self.components:
+			answer.append( c.getEnthalpiesofVaporization(T) )
+		return numpy.array(answer)
+	
 	def getPureVaporPressures(self,T):
 		"""return an array of the pure component vapor pressures"""
 		answer = list()
@@ -155,7 +178,7 @@ class Layer:
 		# first get the species amount changes (as an array)
 		dNdt = -1 * self.getMolarFluxes(temperature)
 		# then get the temperature change, and append it to the array
-		dUdt = sum( dNdt * self.enthalpies_of_vaporization )
+		dUdt = sum( dNdt * self.getEnthalpiesofVaporization(temperature) )
 		dUdt = dUdt + self.getHeatFlux(temperature)
 		dTdt = dUdt / sum( self.amounts * self.molar_heat_capacities )
 		return numpy.append(dNdt,dTdt)
@@ -169,8 +192,8 @@ if __name__ == '__main__':
 compounds = CompoundsDatabase('compounds.csv')
 undecane=compounds['undecane']
 
-print "Vapor pressure of pure undecane at 300K is ", undecane.getPureComponentVaporPressure(300)
-print "and its Enthlapy of vaporization is",undecane.enthalpy_of_vaporization
+print "Vapor pressure of pure undecane at 300 K is ", undecane.getPureComponentVaporPressure(300)
+print "and its Enthlapy of vaporization at 300 K is",undecane.getEnthalpiesofVaporization(300)
 
 # this would be the full list in a random order:
 list_of_compounds = compounds.values()
@@ -199,7 +222,7 @@ vector_of_variables = numpy.append(layer.amounts, 300)
 
 print "The right hand side of the ODE at t=0 is ", layer.rightSideOfODE(vector_of_variables, 0)
 
-timepoints = numpy.linspace(0,0.2,201) # 201 points spread linearly between 0 and 0.2 seconds
+timepoints = numpy.linspace(0,0.5,501) # 501 points spread linearly between 0 and 0.5 seconds
 results = odeint(layer.rightSideOfODE, vector_of_variables, timepoints)
 print "After %g seconds the vector of results is %s"%(timepoints[-1], results[-1])
 
