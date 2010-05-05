@@ -91,7 +91,7 @@ class CompoundsDatabase(dict):
 			# place it in the dictionary
 			#print "Have just read in ",c
 			self[c.name] = c
-		
+
 class Layer:
 	"""
 	A uniform layer of several compounds, all mixed, at the same temperature.
@@ -196,13 +196,29 @@ print "Vapor pressure of pure undecane at 300 K is ", undecane.getPureComponentV
 print "and its Enthlapy of vaporization at 300 K is",undecane.getEnthalpiesofVaporization(300)
 
 # this would be the full list in a random order:
-list_of_compounds = compounds.values()
+#list_of_compounds = compounds.values()
 # this will be just the eight we specify, in the specified order:
-list_of_compounds = [ compounds[name] for name in ['undecane', 'c21', 'acetophenone', 'diethyl phthalate', 'diethylene glycol', 'epsilon-caprolactone', 'gamma-butyrolactone', 'glycerol', 'triethylene glycol'] ]
+#list_of_compounds = [ compounds[name] for name in ['undecane', 'c21', 'acetophenone', 'diethyl phthalate', 'diethylene glycol', 'epsilon-caprolactone', 'gamma-butyrolactone', 'glycerol', 'triethylene glycol'] ]
+
+
+initial_amounts_all = {}                        # holds all initial amounts (for all experiments)
+#initial_amounts_file = 'initial_amounts.csv'                       # initial amounts filename
+initial_amounts_file = 'InitialAmounts.txt'
+for x in open(initial_amounts_file):            # for every line in the file, get the initial amounts
+        y = x.rstrip().split('\t')
+        if 'acetophenone' in x or 'exp' in x:
+                list_of_compounds = [compounds[name] for name in y[1:]]
+                print list_of_compounds
+                continue
+        z = [float(i) for i in y]
+        initial_amounts_all[z[0]] = z[1:]
+initial_amounts = numpy.array(initial_amounts_all[1])        # 1st experiment is [1], 2nd [2]
+#print initial_amounts
 
 layer = Layer(list_of_compounds)
 
-initial_amounts = numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])   # relative molar amounts - will be scaled to get correct initial_thickness
+
+#initial_amounts = numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])   # relative molar amounts - will be scaled to get correct initial_thickness
 current_thickness = sum( initial_amounts / layer.molar_densities )
 
 initial_thickness = 1.0e-5 # m
@@ -238,17 +254,20 @@ thicknesses = thicknesses.sum(axis=1) # add the components up, at each time poin
 import pylab
 pylab.figure(1)
 pylab.plot(timepoints,amounts)
+pylab.title('mol fractions')
 pylab.xlabel("time (s)")
 pylab.ylabel("amount (mol/m2)")
 pylab.show()
 
 pylab.figure(2)
+pylab.title('temperature')
 pylab.plot(timepoints,temperatures)
 pylab.xlabel("time (s)")
 pylab.ylabel("temperature (K)")
 pylab.show()
 
 pylab.figure(3)
+pylab.title('layer thickness')
 pylab.plot(timepoints,thicknesses)
 pylab.xlabel("time (s)")
 pylab.ylabel("thickness (m)")
