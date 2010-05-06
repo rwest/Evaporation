@@ -36,9 +36,11 @@ class Compound:
 		"""This function returns how the compound will look in the console."""
 		return "<Compound %r>"%self.name
 
-	def getEnthalpiesofVaporization(self,Temperature):
+	def getEnthalpyOfVaporization(self,Temperature):
 		"""
-                Use Antoine Parameters and Eqn 7 from Epstein 2009 to get enthalpies of vaporization at Temperature.
+                Use Antoine Parameters and Eqn 7 from Epstein 2009 to get enthalpy of vaporization at Temperature.
+                Temperature is given in Kelvin
+                Hvap is returned in J/mol/K
 
                 Hvap = 2.303*R*T^2*B/(C+T-273.15)^2
 
@@ -121,11 +123,11 @@ class Layer:
 		"""return an array of the mole fractions"""
 		return self.amounts / self.amounts.sum()
 
-	def getEnthalpiesofVaporization(self,T):
+	def getEnthalpiesOfVaporization(self,T):
 		"""return an array of the enthalpies of vaporization at a given T"""
 		answer = list()
 		for c in self.components:
-			answer.append( c.getEnthalpiesofVaporization(T) )
+			answer.append( c.getEnthalpyOfVaporization(T) )
 		return numpy.array(answer)
 	
 	def getPureVaporPressures(self,T):
@@ -178,7 +180,7 @@ class Layer:
 		# first get the species amount changes (as an array)
 		dNdt = -1 * self.getMolarFluxes(temperature)
 		# then get the temperature change, and append it to the array
-		dUdt = sum( dNdt * self.getEnthalpiesofVaporization(temperature) )
+		dUdt = sum( dNdt * self.getEnthalpiesOfVaporization(temperature) )
 		dUdt = dUdt + self.getHeatFlux(temperature)
 		dTdt = dUdt / sum( self.amounts * self.molar_heat_capacities )
 		return numpy.append(dNdt,dTdt)
@@ -193,7 +195,7 @@ compounds = CompoundsDatabase('compounds.csv')
 undecane=compounds['undecane']
 
 print "Vapor pressure of pure undecane at 300 K is ", undecane.getPureComponentVaporPressure(300)
-print "and its Enthlapy of vaporization at 300 K is",undecane.getEnthalpiesofVaporization(300)
+print "and its Enthlapy of vaporization at 300 K is",undecane.getEnthalpyOfVaporization(300)
 
 # this would be the full list in a random order:
 #list_of_compounds = compounds.values()
