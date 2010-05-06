@@ -1,3 +1,10 @@
 Name,Antoine A,Antoine B,Antoine C,Mass Density,Molecular Weight,Molar Heat Capacity,Comments
-undecane,4.101,1572.477,188.022,740,156.31,341.1,c21,5.921,3571.218,253.197,792,310,666.4,
-acetophenone,7.4,1901.2,218.697,1030,120.0629,227.6,"deltaHvap & Cp from NIST, d from Merck or MSDS"diethyl phthalate,7.684,2304.8,185.845,1232,222.1088,360,"deltaHvap & Cp from NIST, d from Merck or MSDS"diethylene glycol,7.6965,2078.7,186.657,1118,106.0776,250,"deltaHvap & Cp from NIST, d from Merck or MSDS"epsilon-caprolactone,7.8311,2522,268.612,1030,114.0782,196.8,"deltaHvap & Cp from NIST, d from Merck or MSDS"gamma-butyrolactone,7.6742,2147.6,244.041,1129,86.0464,141,"deltaHvap & Cp from NIST, d from Merck or MSDS"glycerol,9.9079,3821.4,253.806,1260,92.0617,226,"deltaHvap & Cp from NIST, d from Merck or MSDS"triethylene glycol,10.2245,4208.3,295.198,1100,150.1088,330,"deltaHvap & Cp from NIST, d from Merck or MSDS"
+undecane,4.101,1572.477,188.022,740,156.31,341.1,
+c21,5.921,3571.218,253.197,792,310,666.4,
+acetophenone,7.4,1901.2,218.697,1030,120.0629,227.6,"deltaHvap & Cp from NIST, d from Merck or MSDS"
+diethyl phthalate,7.684,2304.8,185.845,1232,222.1088,360,"deltaHvap & Cp from NIST, d from Merck or MSDS"
+diethylene glycol,7.6965,2078.7,186.657,1118,106.0776,250,"deltaHvap & Cp from NIST, d from Merck or MSDS"
+epsilon-caprolactone,7.8311,2522,268.612,1030,114.0782,196.8,"deltaHvap & Cp from NIST, d from Merck or MSDS"
+gamma-butyrolactone,7.6742,2147.6,244.041,1129,86.0464,141,"deltaHvap & Cp from NIST, d from Merck or MSDS"
+glycerol,9.9079,3821.4,253.806,1260,92.0617,226,"deltaHvap & Cp from NIST, d from Merck or MSDS"
+triethylene glycol,10.2245,4208.3,295.198,1100,150.1088,330,"deltaHvap & Cp from NIST, d from Merck or MSDS"
