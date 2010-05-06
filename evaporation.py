@@ -262,6 +262,14 @@ temperatures = results[:,-1]
 thicknesses = amounts / layer.molar_densities
 thicknesses = thicknesses.sum(axis=1) # add the components up, at each time point
 
+for i in range(len(timepoints)):
+	time = timepoints[i]
+	thickness = thicknesses[i]
+	if not thickness > 0: 
+		print "Reached zero thickness after %g seconds"%time
+		break # breaks out of the for loop.
+else: # an 'else' clause on a for loop is only executed if the loop completed without a 'break'
+	print "Did not reach zero thickness in %g seconds"%time
 
 #plot the results
 import pylab
