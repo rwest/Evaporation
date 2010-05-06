@@ -6,6 +6,7 @@ evaporation.py
 Created by Richard West on 2010-04-26.
 Copyright (c) 2010 MIT. All rights reserved.
 
+written by kelly as a test
 """
 
 import sys
@@ -20,14 +21,14 @@ class Compound:
 	"""
 	A chemical compound
 	
-	A,B,C are Antoine parameters in mmHg and Kelvin
+	A,B,C are Antoine parameters in Bar and Kelvin
 	"""
-	def __init__(self, name, Antoine_params, mass_density, MW, Cp):
+	def __init__(self, name, Antoine_params, mass_density, MW, Hvap, Cp):
 		self.name = name
 		self.Antoine_params = Antoine_params # a tuple or list: [A,B,C]
 		self.mass_density = mass_density # kg/m^3
 		self.molar_mass = MW # g/mol
-		#self.enthalpy_of_vaporization = Hvap
+		self.enthalpy_of_vaporization = Hvap
 		self.molar_heat_capacity = Cp
 		# derived properties
 		self.molar_density = mass_density / (0.001*MW) # kg/m^3 / kg/mol = mol/m^3
@@ -35,39 +36,23 @@ class Compound:
 	def __repr__(self):
 		"""This function returns how the compound will look in the console."""
 		return "<Compound %r>"%self.name
-
-	def getEnthalpiesofVaporization(self,Temperature):
-		"""
-                Use Antoine Parameters and Eqn 7 from Epstein 2009 to get enthalpies of vaporization at Temperature.
-
-                Hvap = 2.303*R*T^2*B/(C+T-273.15)^2
-
-                R = 8.3145 J/molK
-              """
-		B = self.Antoine_params[1]
-		C = self.Antoine_params[2]
-
-		# Eqn 7 from Epstein et al 2009
-		Hvap = 2.303*8.3145*Temperature*Temperature*B/((C + Temperature - 273.15)*(C + Temperature - 273.15))
-		return Hvap # units are J/molK
-
-
+		
 	def getPureComponentVaporPressure(self,Temperature):
 		"""
 		Use Antoine Equation to get saturated vapor pressure at Temperature.
 		returns P in Pa
 		
-		A,B,C are for mmHg and K (as provided in Epstein 2009 Supp Info) and must subtract 273.15 from Temperature to convert to degrees C as required by Antoine Eqn.
+		Assumes A,B,C are for bar and K (as provided on webbook.nist.gov)
 		
-		P = 10^(A-B/(C+T-273.15))
+		P = 10^(A-B/(C+T))
 		"""
 		A = self.Antoine_params[0]
 		B = self.Antoine_params[1]
 		C = self.Antoine_params[2]
 		
 		# Antoine's Equation
-		PmmHg =  10**(A - B / (C + Temperature - 273.15))
-		return PmmHg * 133.322 # to get Pa
+		Pbar =  10**(A - B / (C + Temperature))
+		return Pbar * 1E5 # to get Pa
 		
 class CompoundsDatabase(dict):
 	"""
@@ -86,12 +71,12 @@ class CompoundsDatabase(dict):
 			              Antoine_params = [float(row['Antoine A']),float(row['Antoine B']),float(row['Antoine C'])],
 			              mass_density = float(row['Mass Density']),
 			              MW = float(row['Molecular Weight']),
-			              #Hvap = float(row['Enthalpy of Vaporization']),
+			              Hvap = float(row['Enthalpy of Vaporization']),
 			              Cp = float(row['Molar Heat Capacity']) )
 			# place it in the dictionary
 			#print "Have just read in ",c
 			self[c.name] = c
-
+		
 class Layer:
 	"""
 	A uniform layer of several compounds, all mixed, at the same temperature.
@@ -107,7 +92,7 @@ class Layer:
 			self.amounts = numpy.zeros(self.number_of_components)
 			
 		self.molar_masses = numpy.array([ c.molar_mass for c in self.components ])
-		#self.enthalpies_of_vaporization  = numpy.array([ c.enthalpy_of_vaporization for c in self.components ])
+		self.enthalpies_of_vaporization  = numpy.array([ c.enthalpy_of_vaporization for c in self.components ])
 		self.molar_heat_capacities = numpy.array([c.molar_heat_capacity for c in self.components])
 		self.molar_densities = numpy.array([c.molar_density for c in self.components])
 		
@@ -115,19 +100,12 @@ class Layer:
 		# but for now we just hard-code them here: 
 		self.heat_transfer_coefficient = 40  # J / K / m^2 / s    (i.e. W/m2K)
 		# 40 W/m2K = ballpark figure eyeballed from a picture in doi:10.1016/0017-9310(80)90153-2
-		self.T_wall = 873.15 # Kelvin. 
+		self.T_wall = 500 # Kelvin. 
 	
 	def getMoleFractions(self):
 		"""return an array of the mole fractions"""
 		return self.amounts / self.amounts.sum()
-
-	def getEnthalpiesofVaporization(self,T):
-		"""return an array of the enthalpies of vaporization at a given T"""
-		answer = list()
-		for c in self.components:
-			answer.append( c.getEnthalpiesofVaporization(T) )
-		return numpy.array(answer)
-	
+		
 	def getPureVaporPressures(self,T):
 		"""return an array of the pure component vapor pressures"""
 		answer = list()
@@ -178,7 +156,7 @@ class Layer:
 		# first get the species amount changes (as an array)
 		dNdt = -1 * self.getMolarFluxes(temperature)
 		# then get the temperature change, and append it to the array
-		dUdt = sum( dNdt * self.getEnthalpiesofVaporization(temperature) )
+		dUdt = sum( dNdt * self.enthalpies_of_vaporization )
 		dUdt = dUdt + self.getHeatFlux(temperature)
 		dTdt = dUdt / sum( self.amounts * self.molar_heat_capacities )
 		return numpy.append(dNdt,dTdt)
@@ -192,36 +170,20 @@ if __name__ == '__main__':
 compounds = CompoundsDatabase('compounds.csv')
 undecane=compounds['undecane']
 
-print "Vapor pressure of pure undecane at 300 K is ", undecane.getPureComponentVaporPressure(300)
-print "and its Enthlapy of vaporization at 300 K is",undecane.getEnthalpiesofVaporization(300)
+print "Vapor pressure of pure undecane at 400K is ", undecane.getPureComponentVaporPressure(400)
+print "and its Enthlapy of vaporization is",undecane.enthalpy_of_vaporization
 
 # this would be the full list in a random order:
-#list_of_compounds = compounds.values()
-# this will be just the eight we specify, in the specified order:
-#list_of_compounds = [ compounds[name] for name in ['undecane', 'c21', 'acetophenone', 'diethyl phthalate', 'diethylene glycol', 'epsilon-caprolactone', 'gamma-butyrolactone', 'glycerol', 'triethylene glycol'] ]
-
-
-initial_amounts_all = {}                        # holds all initial amounts (for all experiments)
-#initial_amounts_file = 'initial_amounts.csv'                       # initial amounts filename
-initial_amounts_file = 'InitialAmounts.txt'
-for x in open(initial_amounts_file):            # for every line in the file, get the initial amounts
-        y = x.rstrip().split('\t')
-        if 'acetophenone' in x or 'exp' in x:
-                list_of_compounds = [compounds[name] for name in y[1:]]
-                print list_of_compounds
-                continue
-        z = [float(i) for i in y]
-        initial_amounts_all[z[0]] = z[1:]
-initial_amounts = numpy.array(initial_amounts_all[1])        # 1st experiment is [1], 2nd [2]
-#print initial_amounts
+list_of_compounds = compounds.values()
+# this will be just the two we specify, in the specified order:
+list_of_compounds = [ compounds[name] for name in ['undecane', 'c21'] ]
 
 layer = Layer(list_of_compounds)
 
-
-#initial_amounts = numpy.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])   # relative molar amounts - will be scaled to get correct initial_thickness
+initial_amounts = numpy.array([1.0, 2.0])   # relative molar amounts - will be scaled to get correct initial_thickness
 current_thickness = sum( initial_amounts / layer.molar_densities )
 
-initial_thickness = 1.0e-5 # m
+initial_thickness = 0.5e-3 # m
 initial_amounts = initial_amounts * initial_thickness/current_thickness # moles (per unit area)
 
 # set the amounts
@@ -229,16 +191,16 @@ layer.amounts = initial_amounts
 
 print "The initial mole fractions are ", layer.getMoleFractions()
 
-print "The vapor pressures at 300K are", layer.getVaporPressures(300)
+print "The vapor pressures at 400K are", layer.getVaporPressures(400)
 
-print "The molar fluxes at 300K are", layer.getMolarFluxes(300)
+print "The molar fluxes at 400K are", layer.getMolarFluxes(400)
 
 # add the temperature on as the last variable
-vector_of_variables = numpy.append(layer.amounts, 300)
+vector_of_variables = numpy.append(layer.amounts, 400)
 
 print "The right hand side of the ODE at t=0 is ", layer.rightSideOfODE(vector_of_variables, 0)
 
-timepoints = numpy.linspace(0,0.5,501) # 501 points spread linearly between 0 and 0.5 seconds
+timepoints = numpy.linspace(0,1,501) # 501 points spread linearly between 0 and 1 seconds
 results = odeint(layer.rightSideOfODE, vector_of_variables, timepoints)
 print "After %g seconds the vector of results is %s"%(timepoints[-1], results[-1])
 
@@ -254,20 +216,17 @@ thicknesses = thicknesses.sum(axis=1) # add the components up, at each time poin
 import pylab
 pylab.figure(1)
 pylab.plot(timepoints,amounts)
-pylab.title('mol fractions')
 pylab.xlabel("time (s)")
 pylab.ylabel("amount (mol/m2)")
 pylab.show()
 
 pylab.figure(2)
-pylab.title('temperature')
 pylab.plot(timepoints,temperatures)
 pylab.xlabel("time (s)")
 pylab.ylabel("temperature (K)")
 pylab.show()
 
 pylab.figure(3)
-pylab.title('layer thickness')
 pylab.plot(timepoints,thicknesses)
 pylab.xlabel("time (s)")
 pylab.ylabel("thickness (m)")
