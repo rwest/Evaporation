@@ -16,6 +16,9 @@ import numpy
 from scipy.integrate import odeint
 import csv
 
+# should use ODE solver ATOL or something
+ZERO_CUTOFF = numpy.finfo( numpy.float).tiny
+
 class Compound:
 	"""
 	A chemical compound
@@ -120,8 +123,16 @@ class Layer:
 		self.T_wall = 873.15 # Kelvin. 
 	
 	def getMoleFractions(self):
-		"""return an array of the mole fractions"""
-		return self.amounts / self.amounts.sum()
+		"""
+		return an array of the mole fractions, or an array of zeros if
+		the total amount is less than ZERO_CUTOFF
+		"""
+		non_negative_amounts = self.amounts.clip(0)
+		total_amount = non_negative_amounts.sum()
+		if total_amount > ZERO_CUTOFF:
+			return self.amounts / total_amount
+		else:
+			return self.amounts * 0
 
 	def getEnthalpiesOfVaporization(self,T):
 		"""return an array of the enthalpies of vaporization at a given T"""
@@ -256,7 +267,7 @@ thicknesses = thicknesses.sum(axis=1) # add the components up, at each time poin
 import pylab
 pylab.figure(1)
 pylab.plot(timepoints,amounts)
-pylab.title('mol fractions')
+pylab.title('molar amounts')
 pylab.xlabel("time (s)")
 pylab.ylabel("amount (mol/m2)")
 pylab.show()
